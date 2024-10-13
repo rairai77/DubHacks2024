@@ -12,21 +12,24 @@ function component(target) { target.getTypeName = function () { return __selfTyp
 let NewScript = class NewScript extends BaseScriptComponent {
     onAwake() {
         this.createEvent("OnStartEvent").bind(() => this.onStart());
+        this.createEvent("UpdateEvent").bind(() => this.onUpdate());
     }
     onStart() {
-        this.getData();
+    }
+    onUpdate() {
+        // this.getData()
     }
     getData() {
-        const request = RemoteServiceHttpRequest.create();
-        request.method = RemoteServiceHttpRequest.HttpRequestMethod.Get;
-        request.url = "https://example.com/";
-        print(request.body);
-        this.remoteServiceModule.performHttpRequest(request, (response) => {
-            print("STATUS CODE: " + response.statusCode);
-            print("HEADERS: " + JSON.stringify(response.headers));
-            print("RESPONSE BODY: " + response.body);
-            this.text.text = response.body;
-        });
+        // const request = RemoteServiceHttpRequest.create()
+        // request.method = RemoteServiceHttpRequest.HttpRequestMethod.Get
+        // request.url = "https://dubhacks2024.onrender.com/"
+        // print(request.body)
+        // this.remoteServiceModule.performHttpRequest(request, (response) => {
+        //     print("STATUS CODE: " + response.statusCode)
+        //     print("HEADERS: " + JSON.stringify(response.headers))
+        //     print("RESPONSE BODY: " + response.body)
+        //     this.text.text = response.body;
+        //     })
     }
 };
 exports.NewScript = NewScript;
