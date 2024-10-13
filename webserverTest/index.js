@@ -31,6 +31,11 @@ app.post('/upload-audio', (req, res) => {
     res.status(200).send('Audio chunk added successfully');
 });
 
+app.get('/clear-audio', (req, res) => {
+    accumulatedAudio = [];
+    res.status(200).send('Audio data cleared');
+})
+
 // Endpoint to download the concatenated WAV file
 app.get('/download-audio', (req, res) => {
     if (accumulatedAudio.length > 0) {
