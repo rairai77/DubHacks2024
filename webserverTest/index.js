@@ -1,7 +1,7 @@
 const express = require('express');
 const wav = require('wav');
 const atob = require('atob');
-const AWS = require('aws-sdk');
+const { Transcribe } = require('@aws-sdk/client-transcribe');
 const axios = require('axios');
 require('dotenv').config(); // Import dotenv to use environment variables
 
@@ -9,10 +9,16 @@ const app = express();
 const port = process.env.PORT || 4000;
 
 // Initialize AWS Transcribe
-const transcribeService = new AWS.TranscribeService({
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID, // Use environment variables for security
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: 'us-west-2' // Update to your region
+const transcribeService = new Transcribe({
+    credentials: {
+        // Use environment variables for security
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    },
+
+    // Update to your region
+    region: 'us-west-2'
 });
 
 let accumulatedAudio = [];
@@ -54,7 +60,7 @@ app.post('/start-transcription', async (req, res) => {
     };
 
     try {
-        await transcribeService.startTranscriptionJob(params).promise();
+        await transcribeService.startTranscriptionJob(params);
         
         // Make a GET request to clear the audio
         const clearAudioResponse = await axios.get('https://dubhacks2024.onrender.com/clear-audio'); // Update with your server URL
