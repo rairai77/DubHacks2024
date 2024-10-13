@@ -44,58 +44,31 @@ app.post('/upload-audio', (req, res) => {
         console.log("Accumulated 5s");
     }
 });
-
-// Endpoint to start the transcription job
-app.post('/start-transcription', async (req, res) => {
-    const timestamp = Date.now(); // Get the current timestamp
-    const audioFileUri = `s3://dubhackstranscribe/input-file-${timestamp}.wav`; // Unique filename
-
-    const params = {
-        TranscriptionJobName: `TranscriptionJob-${timestamp}`, // Unique job name
-        LanguageCode: 'en-US', // Specify your language code
-        Media: {
-            MediaFileUri: audioFileUri
-        },
-        OutputBucketName: 'dubhackstranscribeoutput' // Update with your output bucket
-    };
-
-    try {
-        await transcribeService.startTranscriptionJob(params);
-        
-        // Make a GET request to clear the audio
-        const clearAudioResponse = await axios.get('https://dubhacks2024.onrender.com/clear-audio'); // Update with your server URL
-        console.log(clearAudioResponse.data); // Log response from clear audio
-
-        res.status(200).send('Transcription job started and audio cleared');
-    } catch (error) {
-        console.error('Error starting transcription job:', error);
-        res.status(500).send('Failed to start transcription job');
-    }
-});
-
+  
 // Endpoint to clear audio data
 app.get('/clear-audio', (req, res) => {
     clearData();
     res.status(200).send('Audio data cleared');
 });
 
-app.get('/get-audio32', (req, res) => {
-    res.status(200).send(accumulateAudio32.join(','));
-});
+// app.get('/get-audio32', (req, res) => {
+//     res.status(200).send(accumulateAudio32.join(','));
+// });
 
-// Endpoint to download the concatenated WAV file
-app.get('/download-audio', (req, res) => {
+
+// Function to download audio, upload to S3, and start transcription
+async function downloadAudio() {
     if (accumulatedAudio.length > 0) {
         // Convert the accumulated Float32 array to a 16-bit PCM format
         const totalAudioLength = accumulatedAudio.length;
-        const float32Array = new Float32Array(accumulatedAudio);  // Convert back to Float32Array
+        const float32Array = new Float32Array(accumulatedAudio); // Convert back to Float32Array
 
         // Convert Float32Array to 16-bit PCM (WAV standard)
         const int16Array = new Int16Array(totalAudioLength);
         for (let i = 0; i < totalAudioLength; i++) {
-            int16Array[i] = Math.max(-1, Math.min(1, float32Array[i])) * 32767;  // Scale to 16-bit PCM
-            if(int16Array[i] >= 32000 || int16Array[i] <= -32000){
-                int16Array[i] = int16Array[i-1];
+            int16Array[i] = Math.max(-1, Math.min(1, float32Array[i])) * 32767; // Scale to 16-bit PCM
+            if (int16Array[i] >= 32000 || int16Array[i] <= -32000) {
+                int16Array[i] = int16Array[i - 1];
             }
         }
 
@@ -106,33 +79,71 @@ app.get('/download-audio', (req, res) => {
             bitDepth: 16
         });
 
-        let wavBuffer = Buffer.alloc(0);  // Initialize an empty buffer
+        let wavBuffer = Buffer.alloc(0); // Initialize an empty buffer
 
         wavWriter.on('data', (chunk) => {
-            wavBuffer = Buffer.concat([wavBuffer, chunk]);  // Append each chunk to the buffer
+            wavBuffer = Buffer.concat([wavBuffer, chunk]); // Append each chunk to the buffer
         });
 
         wavWriter.write(Buffer.from(int16Array.buffer));
-        wavWriter.end(() => {
-            // Send the combined WAV file as a response
-            res.setHeader('Content-Type', 'audio/wav');
-            res.setHeader('Content-Disposition', 'attachment; filename="output.wav"');
-            res.send(wavBuffer);
+        wavWriter.end(async () => {
+            // Set up parameters for S3 upload and transcription job
+            const s3Params = {
+                Bucket: 'dubhackstranscribe', // Replace with your bucket name
+                Key: `input-file-${Date.now()}.wav`, // Unique filename
+                Body: wavBuffer,
+                ContentType: 'audio/wav'
+            };
+
+            try {
+                // Upload the WAV file to S3
+                const uploadResult = await s3.upload(s3Params).promise();
+                console.log('Upload succeeded:', uploadResult);
+
+                // Parameters for the transcription job
+                const transcriptionParams = {
+                    TranscriptionJobName: `TranscriptionJob-${Date.now()}`, // Unique job name
+                    IdentifyLanguage, // For example, 'en-US'
+                    MediaFormat: 'wav', // Assuming you are using 'wav'
+                    Media: {
+                        MediaFileUri: uploadResult.Location // Use the S3 file location
+                    },
+                    OutputBucketName: 'dubhackstranscribeoutput' // Update with your output bucket
+                };
+
+                // Start the transcription job
+                await startJob(transcriptionParams);
+            } catch (error) {
+                console.error('Error uploading to S3 or starting transcription:', error);
+            }
         });
     } else {
-        res.status(404).send('No audio data available for download');
+        console.error('No audio data available for download');
     }
-});
+}
+
+// Start transcription job with dynamic params
+const startJob = async (transcriptionParams) => {
+    try {
+        const data = await transcribeClient.send(
+            new StartTranscriptionJobCommand(transcriptionParams)
+        );
+        console.log("Success - put", data);
+        return data; // For unit tests.
+    } catch (err) {
+        console.log("Error", err);
+    }
+};
 
 // Generate a simple sine wave as a test audio input
-let generateSineWave = (frequency, duration, sampleRate = 44100) => {
-    const samples = duration * sampleRate;
-    const sineWave = new Float32Array(samples);
-    for (let i = 0; i < samples; i++) {
-        sineWave[i] = Math.sin((2 * Math.PI * frequency * i) / sampleRate);
-    }
-    return sineWave;
-}
+// let generateSineWave = (frequency, duration, sampleRate = 44100) => {
+//     const samples = duration * sampleRate;
+//     const sineWave = new Float32Array(samples);
+//     for (let i = 0; i < samples; i++) {
+//         sineWave[i] = Math.sin((2 * Math.PI * frequency * i) / sampleRate);
+//     }
+//     return sineWave;
+// }
 
 let clearData = () => {
     accumulatedAudio = [];
