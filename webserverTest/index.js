@@ -2,6 +2,7 @@ const express = require('express');
 const wav = require('wav');
 const atob = require('atob');
 const { Transcribe } = require('@aws-sdk/client-transcribe');
+const { S3 } = require('@aws-sdk/client-s3'); // Import S3 from AWS SDK
 const axios = require('axios');
 require('dotenv').config(); // Import dotenv to use environment variables
 
@@ -99,7 +100,7 @@ async function downloadAudio() {
 
             try {
                 // Upload the WAV file to S3
-                const uploadResult = await s3.upload(s3Params).promise();
+                const uploadResult = await S3.upload(s3Params).promise();
                 console.log('Upload succeeded:', uploadResult);
 
                 // Parameters for the transcription job
