@@ -7,7 +7,7 @@ const port = process.env.PORT || 4000;
 
 // Array to store the concatenated Float32 audio data
 let accumulatedAudio = [];
-
+let accumulateAudio32 = [];
 // Middleware to parse JSON
 app.use(express.json({ limit: '50mb' }));
 
@@ -24,7 +24,7 @@ app.post('/upload-audio', (req, res) => {
 
     // Convert Uint8Array to Float32Array
     const float32Array = new Float32Array(bytes.buffer);
-
+    accumulateAudioForm.push(float32Array);
     // Append the new audio chunk to the accumulated audio array
     accumulatedAudio = accumulatedAudio.concat(Array.from(float32Array));
     // accumulatedAudio = accumulatedAudio.concat(Array.from(generateSineWave(440, 2)));  // 440 Hz tone, 2 seconds long
@@ -33,7 +33,12 @@ app.post('/upload-audio', (req, res) => {
 
 app.get('/clear-audio', (req, res) => {
     accumulatedAudio = [];
+    accumulateAudio32 = [];
     res.status(200).send('Audio data cleared');
+})
+
+app.get('/get-audio32', (req, res) => {
+    res.status(200).send(accumulateAudio32.join(''));
 })
 
 // Endpoint to download the concatenated WAV file
