@@ -114,7 +114,7 @@ async function downloadAudio() {
                 const uploadResult = await s3.send(command);
                 console.log('Upload succeeded:', uploadResult);
                 
-                const mediaFileUri = `https://s3-dubhackstranscribe/${key}`;
+                const mediaFileUri = `https://s3-us-west-2.amazonaws.com/dubhackstranscribe/${key}`;
                 // Parameters for the transcription job
                 const transcriptionParams = {
                     TranscriptionJobName: `TranscriptionJob-${Date.now()}`, // Unique job name
