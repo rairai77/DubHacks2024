@@ -206,7 +206,7 @@ const processTranscriptionResults = async (jobName) => {
         
 
         // Extract the first transcript value
-        const firstTranscript = response.data.results.transcripts[0].transcript;
+        const firstTranscript = response.results.transcripts[0].transcript;
 
         // Add it to the transcripts array
         transcripts += " " + firstTranscript;
