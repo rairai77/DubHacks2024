@@ -205,12 +205,10 @@ const processTranscriptionResults = async (jobName) => {
         // Retrieve the object from S3
         const getObjectCommand = new GetObjectCommand(getObjectParams);
         const response = await s3.send(getObjectCommand);
-        
-        // Convert the stream response to a string
-        const responseBody = JSON.parse(response.Body.toString());
+    console.log("response", response);
         
         // Parse the JSON to extract the transcript
-        const transcriptionData = JSON.parse(responseBody);
+        const transcriptionData = JSON.parse(response);
         const transcriptsString = transcriptionData.results.transcripts[0].transcript;
 
         // Loop through the transcripts array and append each transcript to the accumulated text
