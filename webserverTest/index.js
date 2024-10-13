@@ -4,37 +4,55 @@ const port = process.env.PORT || 4000;
 let counter = 0;
 const frames = [];
 
-app.use(express.json());
+app.use(express.json({ limit: "50mb" })); // Increase limit if you're sending larger audio chunks
+
+// Helper function to decode base64 to ArrayBuffer
+const base64ToArrayBuffer = (base64) => {
+  const binaryString = Buffer.from(base64, 'base64').toString('binary');
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes.buffer;
+};
 
 app.get("/", (req, res) => {
   counter++;
   res.send("Howdy Neighbor " + counter);
 });
+
 app.post("/", (req, res) => {
-  frames.push(req.body.data);
-  aggregatedFrames = aggregateFrames(frames, 44100);
-  res.send(aggregatedFrames);
-  console.log(aggregatedFrames);
+  // Check if req.body.data is base64 encoded, and decode it
+  if (req.body.data) {
+    const decodedBuffer = base64ToArrayBuffer(req.body.data); // Convert base64 to ArrayBuffer
+    frames.push(decodedBuffer);
+    const aggregatedFrames = aggregateFrames(frames, 44100);
+    res.send(Buffer.from(aggregatedFrames)); // Send back as a buffer (binary data)
+    console.log(aggregatedFrames);
+  } else {
+    res.status(400).send('Invalid data');
+  }
 });
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
+
+// Function to aggregate audio frames into one WAV buffer
 const aggregateFrames = (frameBuffers, sampleRate) => {
-  // Total length of all PCM data
   const totalPCMDataLength = frameBuffers.reduce(
     (sum, frame) => sum + frame.byteLength,
-    0,
+    0
   );
 
-  // Create a new buffer for the final WAV file (44 bytes for header + total PCM data length)
   const finalBuffer = new ArrayBuffer(44 + totalPCMDataLength);
   const finalView = new DataView(finalBuffer);
 
-  // Write the WAV header
+  // Write WAV header
   writeWAVHeader(finalView, totalPCMDataLength, sampleRate);
 
-  // Copy each frame's PCM data into the final buffer (starting after the 44-byte header)
+  // Copy PCM data from each frame
   let offset = 44;
   frameBuffers.forEach((frameBuffer) => {
     const pcmData = new Uint8Array(frameBuffer);
@@ -45,7 +63,7 @@ const aggregateFrames = (frameBuffers, sampleRate) => {
   return finalBuffer;
 };
 
-// Function to write the WAV header
+// Function to write WAV header
 const writeWAVHeader = (view, pcmDataLength, sampleRate) => {
   writeString(view, 0, "RIFF");
   view.setUint32(4, 36 + pcmDataLength, true); // File size - 8 bytes
@@ -71,12 +89,3 @@ const writeString = (view, offset, string) => {
     view.setUint8(offset + i, string.charCodeAt(i));
   }
 };
-
-// Example of how to use it
-// Assume `frames` is an array of PCM audio frame buffers, each containing 0.3s of audio data
-const sampleRate = 44100; // Example sample rate
-
-// Aggregate all frames into a single WAV file buffer
-const finalWavBuffer = aggregateFrames(frames, sampleRate);
-
-// Now you can send this `finalWavBuffer` as the aggregated audio
