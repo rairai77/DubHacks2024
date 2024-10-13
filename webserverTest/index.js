@@ -207,7 +207,7 @@ const processTranscriptionResults = async (jobName) => {
         const response = await s3.send(getObjectCommand);
         
         // Convert the stream response to a string
-        const responseBody = await streamToString(response.Body);
+        const responseBody = JSON.parse(response.Body.toString());
         
         // Parse the JSON to extract the transcript
         const transcriptionData = JSON.parse(responseBody);
