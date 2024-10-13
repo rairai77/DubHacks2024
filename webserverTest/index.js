@@ -42,6 +42,7 @@ app.post('/upload-audio', (req, res) => {
     if (accumulatedAudio.length > 44100 * 5) {
         accumulatedAudio = accumulatedAudio.slice(accumulatedAudio.length - 44100 * 5);
         console.log("Accumulated 5s");
+        downloadAudio();
     }
 });
   
@@ -86,6 +87,7 @@ async function downloadAudio() {
         });
 
         wavWriter.write(Buffer.from(int16Array.buffer));
+        clearData();
         wavWriter.end(async () => {
             // Set up parameters for S3 upload and transcription job
             const s3Params = {
@@ -125,7 +127,7 @@ async function downloadAudio() {
 // Start transcription job with dynamic params
 const startJob = async (transcriptionParams) => {
     try {
-        const data = await transcribeClient.send(
+        const data = await transcribeService.send(
             new StartTranscriptionJobCommand(transcriptionParams)
         );
         console.log("Success - put", data);
