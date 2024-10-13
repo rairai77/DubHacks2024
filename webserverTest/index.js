@@ -2,17 +2,13 @@ const express = require('express');
 const wav = require('wav');
 const atob = require('atob');
 const { Transcribe } = require('@aws-sdk/client-transcribe');
-const { S3 } = require('@aws-sdk/client-s3'); // Import S3 from AWS SDK
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3'); // Use require here
 const axios = require('axios');
-require('dotenv').config(); // Import dotenv to use environment variables
-import {
-    PutObjectCommand,
-    S3Client,
-  } from "@aws-sdk/client-s3";
+require('dotenv').config(); 
+
 
 const app = express();
 const port = process.env.PORT || 4000;
-const client = new S3Client({});
 
 // Initialize AWS Transcribe
 const transcribeService = new Transcribe({
@@ -27,7 +23,7 @@ const transcribeService = new Transcribe({
     region: 'us-west-2'
 });
 
-const s3 = new S3({
+const s3 = new S3Client({
     credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
