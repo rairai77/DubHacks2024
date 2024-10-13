@@ -111,7 +111,7 @@ async function downloadAudio() {
 
             try {
                 // Upload the WAV file to S3
-                const uploadResult = await client.send(command);
+                const uploadResult = await s3.send(command);
                 console.log('Upload succeeded:', uploadResult);
 
                 // Parameters for the transcription job
