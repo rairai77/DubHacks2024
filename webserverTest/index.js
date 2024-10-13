@@ -2,7 +2,7 @@ const express = require('express');
 const wav = require('wav');
 const atob = require('atob');
 const { Transcribe, StartTranscriptionJobCommand, GetTranscriptionJobCommand } = require('@aws-sdk/client-transcribe');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3'); // Use require here
+const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3'); // Use require here
 const axios = require('axios');
 require('dotenv').config(); 
 
