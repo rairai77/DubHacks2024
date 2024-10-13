@@ -1,6 +1,7 @@
 const express = require('express');
 const wav = require('wav');
 const atob = require('atob');
+const { HttpRequest } = require('@aws-sdk/protocol-http');
 const { Hash } = require('@aws-sdk/hash-node');
 const { S3RequestPresigner } =require('@aws-sdk/s3-request-presigner');
 const { TranscribeClient, StartTranscriptionJobCommand, GetTranscriptionJobCommand } = require('@aws-sdk/client-transcribe');
@@ -35,11 +36,11 @@ const transcribeService = new TranscribeClient({
 });
 
 const s3 = new S3Client({
+    region: 'us-west-2',
     credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-    },
-    region: 'us-west-2'
+    }
 })
 
 let accumulatedAudio = [];
@@ -217,10 +218,10 @@ const processTranscriptionResults = async (key) => {
 
         // Create a presigned URL for the object
         const request = new HttpRequest({
-            ...getObjectParams,
             protocol: 'https:',
-            hostname: `${getObjectParams.Bucket}.s3.${"us-west-2"}.amazonaws.com`,
-            method: 'GET'
+            hostname: 'dubhackstranscribeoutput.s3.us-west-2.amazonaws.com',
+            method: 'GET',
+            path: `/${getObjectParams.Key}`,
         });
 
         // Generate the presigned URL
