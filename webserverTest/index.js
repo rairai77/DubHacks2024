@@ -24,7 +24,8 @@ app.get("/", (req, res) => {
 
 app.post("/", (req, res) => {
   // Check if req.body.data is base64 encoded, and decode it
-    console.log(req.body);
+    console.log(req);
+  console.log(req.body);
   if (req.body.data) {
     const decodedBuffer = base64ToArrayBuffer(req.body.data); // Convert base64 to ArrayBuffer
     frames.push(decodedBuffer);
