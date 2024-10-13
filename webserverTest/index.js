@@ -158,13 +158,14 @@ const pollJobStatus = async (jobName) => {
     
     const checkStatus = async () => {
         try {
-            const command = new GetTranscriptionJobCommand( { TranscriptionJobName: jobName });
+            const command = new GetTranscriptionJobCommand(jobName);
             const TranscriptionJob  = await transcribeClient.send(command);
             
             if (TranscriptionJob.TranscriptionJobStatus === "COMPLETED") {
                 // Call processTranscriptionResults once job is completed
+                console.log("next line processes results");
                 processTranscriptionResults(jobName);
-            } else if (TranscriptionJob.TranscriptionjobStatus === 'FAILED') {
+            } else if (TranscriptionJob.TranscriptionJobStatus === 'FAILED') {
                 console.error(`Transcription job ${jobName} failed.`);
             } else {
                 setTimeout(checkStatus, 5000); // Retry after 5 seconds if not completed
