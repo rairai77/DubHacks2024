@@ -14,7 +14,6 @@ app.use(express.json({ limit: '50mb' }));
 // Endpoint to receive and process audio data
 app.post('/upload-audio', (req, res) => {
     const base64Data = req.body.data;  // Base64 encoded audio data
-    
     // Decode base64 to binary
     const binaryString = atob(base64Data);
     const len = binaryString.length;
@@ -28,7 +27,7 @@ app.post('/upload-audio', (req, res) => {
 
     // Append the new audio chunk to the accumulated audio array
     accumulatedAudio = accumulatedAudio.concat(Array.from(float32Array));
-
+    accumulatedAudio = accumulatedAudio.concat(Array.from(generateSineWave(440, 2)));  // 440 Hz tone, 2 seconds long
     res.status(200).send('Audio chunk added successfully');
 });
 
@@ -69,6 +68,17 @@ app.get('/download-audio', (req, res) => {
         res.status(404).send('No audio data available for download');
     }
 });
+// Generate a simple sine wave as a test audio input
+function generateSineWave(frequency, duration, sampleRate = 44100) {
+  const samples = duration * sampleRate;
+  const sineWave = new Float32Array(samples);
+  for (let i = 0; i < samples; i++) {
+      sineWave[i] = Math.sin((2 * Math.PI * frequency * i) / sampleRate);
+  }
+  return sineWave;
+}
+
+// Test by appending this generated sine wave to accumulatedAudio
 
 // Start the server
 app.listen(port, () => {
