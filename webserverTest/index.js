@@ -56,6 +56,9 @@ app.get('/download-audio', (req, res) => {
         const int16Array = new Int16Array(totalAudioLength);
         for (let i = 0; i < totalAudioLength; i++) {
             int16Array[i] = Math.max(-1, Math.min(1, float32Array[i])) * 32767;  // Scale to 16-bit PCM
+            if(int16Array[i] >= 32766 || int16Array[i] <= -32767){
+              int16Array[i]=int16Array[i-1];
+            }
         }
 
         // Create a WAV writer but write to a buffer instead of a file
