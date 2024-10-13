@@ -1,10 +1,15 @@
-const express = require('express');
+const express = require("express");
 const app = express();
 const port = process.env.PORT || 4000;
-app.get('/', (req, res) => {
-  res.send('Howdy Neighbor')
-})
+const counter = 0;
+app.get("/", (req, res) => {
+    counter++;
+    res.send("Howdy Neighbor " + counter);
+});
+app.post("/", (req, res) => {
+
+});
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+    console.log(`Example app listening on port ${port}`);
+});
