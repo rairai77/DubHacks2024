@@ -1,7 +1,7 @@
 const express = require('express');
 const wav = require('wav');
 const atob = require('atob');
-const { Transcribe, StartTranscriptionJobCommand, GetTranscriptionJobCommand } = require('@aws-sdk/client-transcribe');
+const { TranscribeClient, StartTranscriptionJobCommand, GetTranscriptionJobCommand } = require('@aws-sdk/client-transcribe');
 const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3'); // Use require here
 const axios = require('axios');
 require('dotenv').config(); 
@@ -11,7 +11,7 @@ const app = express();
 const port = process.env.PORT || 4000;
 
 // Initialize AWS Transcribe
-const transcribeService = new Transcribe({
+const transcribeService = new TranscribeClient({
     credentials: {
         // Use environment variables for security
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -152,20 +152,22 @@ const startJob = async (transcriptionParams) => {
     }
 };
 
+const transcribeClient = new TranscribeClient({ region: 'us-west-2' }); // Update to your AWS region
+
 const pollJobStatus = async (jobName) => {
     
     const checkStatus = async () => {
         try {
             const command = new GetTranscriptionJobCommand( { TranscriptionJobName: jobName, });
-            const { response } = await s3.send(command);
+            const { TranscriptionJob } = await transcribeClient.send(command);
             
-            if (response.jobName.status === "COMPLETED") {
+            if (TranscriptionJob.TranscriptionJobStatus === "COMPLETED") {
                 // Call processTranscriptionResults once job is completed
                 processTranscriptionResults(jobName);
-            } else if (response.TranscriptionJob.TranscriptionjobStatus === 'FAILED') {
+            } else if (TranscriptionJob.TranscriptionjobStatus === 'FAILED') {
                 console.error(`Transcription job ${jobName} failed.`);
             } else {
-                setTimeout(checkStatus, 1000); // Retry after 5 seconds if not completed
+                setTimeout(checkStatus, 5000); // Retry after 5 seconds if not completed
             }
         } catch (err) {
             console.error('Error checking job status:', err);
