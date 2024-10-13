@@ -33,6 +33,8 @@ const s3 = new S3Client({
 
 let accumulatedAudio = [];
 let accumulateAudio32 = [];
+let transcripts = "";
+let outputText = "";
 app.use(express.json({ limit: '50mb' }));
 
 app.post('/upload-audio', (req, res) => {
@@ -160,9 +162,43 @@ const startJob = async (transcriptionParams) => {
 //     return sineWave;
 // }
 
+const processTranscriptionResults = async (jobName) => {
+    try {
+        // Add a small delay to allow the transcription to complete
+        await new Promise(resolve => setTimeout(resolve, 5000));
+
+        // Fetch the transcription result from S3
+        const transcriptResultUrl = `https://dubhackstranscribeoutput.s3.us-west-2.amazonaws.com/${jobName}.json`; // Change this if your JSON output is named differently
+        const response = await axios.get(transcriptResultUrl);
+        
+        // Extract the first transcript value
+        const firstTranscript = response.data.results.transcripts[0].transcript;
+        // Add it to the transcripts array
+        transcripts += " " + firstTranscript;
+        const wordCount = transcripts.trim().split(/\s+/).length;
+
+        if (wordCount >= 10) {
+            outputText = transcripts;
+            transcripts = ""; // Keep only the last 10 words
+            console.log("Transcripts cleared, keeping last 10 words:", transcripts);
+        }
+        console.log('Current Transcripts:', transcripts.join(' ')); // Logs the concatenated transcripts
+    } catch (error) {
+        console.error('Error fetching or processing transcription results:', error);
+    }
+};
+
+app.get('/get-output', (req, res) => {
+    res.status(200).send(outputText);
+});
+
 let clearData = () => {
     accumulatedAudio = [];
     accumulateAudio32 = [];
+}
+
+let clearTranscripts = () => {
+    transcripts = [];
 }
 
 // Start the server
