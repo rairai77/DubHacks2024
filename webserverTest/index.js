@@ -12,7 +12,9 @@ app.get("/", (req, res) => {
 });
 app.post("/", (req, res) => {
   frames.push(req.body.data);
-  res.send(aggregateFrames(frames, 44100));
+  aggregatedFrames = aggregateFrames(frames, 44100);
+  res.send(aggregatedFrames);
+  console.log(aggregatedFrames);
 });
 
 app.listen(port, () => {
