@@ -158,7 +158,7 @@ const pollJobStatus = async (jobName) => {
     
     const checkStatus = async () => {
         try {
-            const command = new GetTranscriptionJobCommand( { TranscriptionJobName: jobName, });
+            const command = new GetTranscriptionJobCommand( { TranscriptionJobName: jobName });
             const { TranscriptionJob } = await transcribeClient.send(command);
             
             if (TranscriptionJob.TranscriptionJobStatus === "COMPLETED") {
