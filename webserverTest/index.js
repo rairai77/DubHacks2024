@@ -100,10 +100,10 @@ async function downloadAudio() {
         clearData();
         wavWriter.end(async () => {
             // Set up parameters for S3 upload and transcription job
-
+            const key = `input-file-${Date.now()}.wav`;
             const command = new PutObjectCommand({
                 Bucket: 'dubhackstranscribe',
-                Key: `input-file-${Date.now()}.wav`,
+                Key: key,
                 Body: wavBuffer,
                 ContentType: 'audio/wav'
             });
@@ -114,12 +114,12 @@ async function downloadAudio() {
                 const uploadResult = await s3.send(command);
                 console.log('Upload succeeded:', uploadResult);
                 
-                
+                const mediaFileUri = `s3://dubhackstranscribe/${key}`;
                 // Parameters for the transcription job
                 const transcriptionParams = {
                     TranscriptionJobName: `TranscriptionJob-${Date.now()}`, // Unique job name
                     Media: {
-                        mediaFileUri: `s3://dubhackstranscribe/${command.Key}` // Use the S3 file location
+                        mediaFileUri: mediaFileUri // Use the S3 file location
                     },
                     OutputBucketName: 'dubhackstranscribeoutput', // Update with your output bucket
                     MediaFormat: 'wav', // Assuming you are using 'wav'
