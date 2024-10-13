@@ -153,12 +153,11 @@ const startJob = async (transcriptionParams) => {
 };
 
 const pollJobStatus = async (jobName) => {
-    const input = { TranscriptionJobName: jobName};
     
     const checkStatus = async () => {
         try {
             const data = await transcribeService.send(
-                new GetTranscriptionJobCommand(input)
+                new GetTranscriptionJobCommand(jobName)
             );
             const jobStatus = data.TranscriptionJob.TranscriptionJobStatus;
             
