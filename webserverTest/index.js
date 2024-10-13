@@ -5,9 +5,14 @@ const { Transcribe } = require('@aws-sdk/client-transcribe');
 const { S3 } = require('@aws-sdk/client-s3'); // Import S3 from AWS SDK
 const axios = require('axios');
 require('dotenv').config(); // Import dotenv to use environment variables
+import {
+    PutObjectCommand,
+    S3Client,
+  } from "@aws-sdk/client-s3";
 
 const app = express();
 const port = process.env.PORT || 4000;
+const client = new S3Client({});
 
 // Initialize AWS Transcribe
 const transcribeService = new Transcribe({
@@ -99,16 +104,18 @@ async function downloadAudio() {
         clearData();
         wavWriter.end(async () => {
             // Set up parameters for S3 upload and transcription job
-            const s3Params = {
-                Bucket: 'dubhackstranscribe', // Replace with your bucket name
-                Key: `input-file-${Date.now()}.wav`, // Unique filename
+
+            const command = new PutObjectCommand({
+                Bucket: 'dubhackstranscribe',
+                Key: `input-file-${Date.now()}.wav`,
                 Body: wavBuffer,
                 ContentType: 'audio/wav'
-            };
+            });
+            
 
             try {
                 // Upload the WAV file to S3
-                const uploadResult = await s3.upload(s3Params).promise();
+                const uploadResult = await client.send(command);
                 console.log('Upload succeeded:', uploadResult);
 
                 // Parameters for the transcription job
