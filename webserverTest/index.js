@@ -113,12 +113,13 @@ async function downloadAudio() {
                 // Upload the WAV file to S3
                 const uploadResult = await s3.send(command);
                 console.log('Upload succeeded:', uploadResult);
-
+                
+                
                 // Parameters for the transcription job
                 const transcriptionParams = {
                     TranscriptionJobName: `TranscriptionJob-${Date.now()}`, // Unique job name
                     Media: {
-                        MediaFileUri: uploadResult.Location // Use the S3 file location
+                        mediaFileUri: `s3://dubhackstranscribe/${command.Key}` // Use the S3 file location
                     },
                     OutputBucketName: 'dubhackstranscribeoutput', // Update with your output bucket
                     MediaFormat: 'wav', // Assuming you are using 'wav'
