@@ -172,7 +172,7 @@ const pollJobStatus = async (jobName) => {
                 console.error(`Transcription job ${jobName} failed.`);
             } else {
                 setTimeout(checkStatus, 5000); // Retry after 5 seconds if not completed
-                console.log("Job not completed yet");
+                console.log(TranscriptionJob);
             }
         } catch (err) {
             console.error('Error checking job status:', err);
