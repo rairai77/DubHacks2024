@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-transcribe": "^3.670.0",
     "atob": "^2.1.2",
     "aws-sdk": "^2.1691.0",
     "axios": "^1.7.7",
