@@ -1,6 +1,7 @@
 const express = require('express');
 const wav = require('wav');
 const atob = require('atob');
+const { Hash } = require('@aws-sdk/hash-node');
 const { S3RequestPresigner } =require('@aws-sdk/s3-request-presigner');
 const { TranscribeClient, StartTranscriptionJobCommand, GetTranscriptionJobCommand } = require('@aws-sdk/client-transcribe');
 const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3'); // Use require here
