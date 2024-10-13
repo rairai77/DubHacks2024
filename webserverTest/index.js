@@ -153,12 +153,12 @@ const startJob = async (transcriptionParams) => {
 };
 
 const pollJobStatus = async (jobName) => {
-    const getJobParams = { TranscriptionJobName: jobName };
+    const input = { TranscriptionJobName: jobName};
     
     const checkStatus = async () => {
         try {
             const data = await transcribeService.send(
-                new GetTranscriptionJobCommand(getJobParams)
+                new GetTranscriptionJobCommand(input)
             );
             const jobStatus = data.TranscriptionJob.TranscriptionJobStatus;
             
@@ -195,13 +195,14 @@ const processTranscriptionResults = async (jobName) => {
         await new Promise(resolve => setTimeout(resolve, 5000));
 
         // Fetch the transcription result from S3
-        const getObjectParams = {
-            Bucket: 'dubhackstranscribeoutput', // Your output bucket name
-            Key: `${jobName}.json`  // Use the job name to locate the correct file
-        };
+        // const getObjectParams = {
+        //     Bucket: 'dubhackstranscribeoutput', // Your output bucket name
+        //     Key: `${jobName}.json`  // Use the job name to locate the correct file
+
+        // };
 
         // Retrieve the object from S3
-        const command = new GetObjectCommand(getObjectParams);
+        const command = new GetTranscriptionJobCommand(jobName);
         const { response } = await s3.send(command);
         
 
