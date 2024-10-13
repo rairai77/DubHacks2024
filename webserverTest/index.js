@@ -22,6 +22,14 @@ const transcribeService = new Transcribe({
     region: 'us-west-2'
 });
 
+const s3 = new S3({
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    },
+    region: 'us-west-2'
+})
+
 let accumulatedAudio = [];
 let accumulateAudio32 = [];
 app.use(express.json({ limit: '50mb' }));
@@ -100,7 +108,7 @@ async function downloadAudio() {
 
             try {
                 // Upload the WAV file to S3
-                const uploadResult = await S3.upload(s3Params).promise();
+                const uploadResult = await s3.upload(s3Params).promise();
                 console.log('Upload succeeded:', uploadResult);
 
                 // Parameters for the transcription job
