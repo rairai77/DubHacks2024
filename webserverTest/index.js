@@ -29,6 +29,11 @@ app.post('/upload-audio', (req, res) => {
     accumulatedAudio = accumulatedAudio.concat(Array.from(float32Array));
     // accumulatedAudio = accumulatedAudio.concat(Array.from(generateSineWave(440, 2)));  // 440 Hz tone, 2 seconds long
     res.status(200).send('Audio chunk added successfully');
+
+    if(accumulatedAudio.length > 44100*5){
+        accumulatedAudio = accumulatedAudio.slice(accumulatedAudio.length-44100*5);
+        console.log("accumulated 5s")
+    }
 });
 
 app.get('/clear-audio', (req, res) => {
