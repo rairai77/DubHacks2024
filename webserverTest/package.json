@@ -11,6 +11,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.670.0",
     "@aws-sdk/client-transcribe": "^3.670.0",
+    "@aws-sdk/hash-node": "^3.374.0",
     "atob": "^2.1.2",
     "aws-sdk": "^2.1691.0",
     "axios": "^1.7.7",
