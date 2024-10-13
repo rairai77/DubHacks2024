@@ -144,7 +144,7 @@ const startJob = async (transcriptionParams) => {
         const data = await transcribeService.send(
             new StartTranscriptionJobCommand(transcriptionParams)
         ) 
-        const { jobName } = transcriptionParams.TranscriptionJobName;
+        const jobName = transcriptionParams.TranscriptionJobName;
         // Poll the job status until it is complete
         pollJobStatus(jobName);
     } catch (err) {
@@ -158,7 +158,11 @@ const pollJobStatus = async (jobName) => {
     
     const checkStatus = async () => {
         try {
-            const command = new GetTranscriptionJobCommand(jobName);
+            const input = {
+                TranscriptionJobName: jobName
+            };
+
+            const command = new GetTranscriptionJobCommand(input);
             const TranscriptionJob  = await transcribeClient.send(command);
             
             if (TranscriptionJob.TranscriptionJobStatus === "COMPLETED") {
