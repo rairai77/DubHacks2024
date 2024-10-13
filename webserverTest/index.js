@@ -119,7 +119,7 @@ async function downloadAudio() {
                 const transcriptionParams = {
                     TranscriptionJobName: `TranscriptionJob-${Date.now()}`, // Unique job name
                     Media: {
-                        mediaFileUri: mediaFileUri // Use the S3 file location
+                        MediaFileUri: mediaFileUri // Use the S3 file location
                     },
                     OutputBucketName: 'dubhackstranscribeoutput', // Update with your output bucket
                     MediaFormat: 'wav', // Assuming you are using 'wav'
