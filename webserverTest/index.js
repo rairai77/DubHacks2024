@@ -162,7 +162,7 @@ const pollJobStatus = async (jobName) => {
             );
             const jobStatus = data.TranscriptionJob.TranscriptionJobStatus;
             
-            if (jobStatus === 'COMPLETED') {
+            if (jobStatus === "COMPLETED") {
                 // Call processTranscriptionResults once job is completed
                 processTranscriptionResults(jobName);
             } else if (jobStatus === 'FAILED') {
@@ -195,9 +195,16 @@ const processTranscriptionResults = async (jobName) => {
         await new Promise(resolve => setTimeout(resolve, 5000));
 
         // Fetch the transcription result from S3
-        const transcriptResultUrl = `https://dubhackstranscribeoutput.s3.us-west-2.amazonaws.com/${jobName}.json`; // Change this if your JSON output is named differently
-        const response = await axios.get(transcriptResultUrl);
+        const getObjectParams = {
+            Bucket: 'dubhackstranscribeoutput', // Your output bucket name
+            Key: `${jobName}.json`  // Use the job name to locate the correct file
+        };
+
+        // Retrieve the object from S3
+        const command = new GetObjectCommand(getObjectParams);
+        const { response } = await s3.send(command);
         
+
         // Extract the first transcript value
         const firstTranscript = response.data.results.transcripts[0].transcript;
 
@@ -207,7 +214,7 @@ const processTranscriptionResults = async (jobName) => {
 
         if (wordCount >= 10) {
             outputText = transcripts;
-            console.log(outputText);
+
             transcripts = ""; // Keep only the last 10 words
             
         }
