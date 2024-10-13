@@ -3,6 +3,7 @@ const app = express();
 const port = process.env.PORT || 4000;
 let counter = 0;
 const frames = [];
+let aggregatedFrames = null;
 
 app.use(express.json({ limit: "50mb" })); // Increase limit if you're sending larger audio chunks
 
@@ -19,7 +20,15 @@ const base64ToArrayBuffer = (base64) => {
 
 app.get("/", (req, res) => {
   counter++;
-  res.send("Howdy Neighbor " + counter);
+  res.send("");
+});
+
+app.get('/download-audio', (req, res) => {
+  // Send as a downloadable file
+  const aggregatedFrames = aggregateFrames(frames, 44100);
+  res.setHeader('Content-Disposition', 'attachment; filename="audio.wav"');
+  res.setHeader('Content-Type', 'audio/wav');
+  res.send(Buffer.from(aggregatedFrames));
 });
 
 app.post("/", (req, res) => {
@@ -27,11 +36,7 @@ app.post("/", (req, res) => {
   if (req.body.data) {
     const decodedBuffer = base64ToArrayBuffer(req.body.data); // Convert base64 to ArrayBuffer
     frames.push(decodedBuffer);
-    const aggregatedFrames = aggregateFrames(frames, 44100);
-    res.send(Buffer.from(aggregatedFrames)); // Send back as a buffer (binary data)
-    if(frames.length==10){
-      console.log(aggregatedFrames);
-    }
+    res.status(200).send('Data Received');
   } else {
     res.status(400).send('Invalid data');
   }
