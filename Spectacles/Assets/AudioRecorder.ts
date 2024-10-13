@@ -86,7 +86,7 @@ export class AudioRecorder extends BaseScriptComponent {
         const request = RemoteServiceHttpRequest.create();
         request.method = RemoteServiceHttpRequest.HttpRequestMethod.Post;
         request.setHeader('Content-Type', 'application/json');
-        request.url = "https://dubhacks2024.onrender.com/upload-audio";
+        request.url = "https://dubhacks2024-uwgd.onrender.com/upload-audio";
         // request.url = "http://localhost:4000/upload-audio";
         request.body = '{"data": "' + base64Data + '"}';
     

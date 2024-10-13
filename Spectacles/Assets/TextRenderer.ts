@@ -14,7 +14,7 @@ export class NewScript extends BaseScriptComponent {
     getData() {
         const request = RemoteServiceHttpRequest.create()
         request.method = RemoteServiceHttpRequest.HttpRequestMethod.Get
-        request.url = "https://dubhacks2024.onrender.com/get-output"
+        request.url = "https://dubhacks2024-uwgd.onrender.com/get-output"
         this.remoteServiceModule.performHttpRequest(request, (response) => {
             print(response.body);
             this.text.text = response.body;
