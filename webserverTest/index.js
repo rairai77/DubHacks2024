@@ -205,33 +205,44 @@ const pollJobStatus = async (jobName) => {
 
 const processTranscriptionResults = async (key) => {
     try {
+        // Define the parameters for the GetObjectCommand to fetch the transcription results
+        const getObjectParams = {
+            Bucket: 'dubhackstranscribeoutput', // Your output bucket name
+            Key: `${key}.json`  // Use the job name to locate the correct file
+        };
 
-        // Define parameters to fetch the transcription result from S3
-        // const getObjectParams = {
-        //     Bucket: 'dubhackstranscribeoutput', // Your output bucket name
-        //     Key: `${jobName}.json`  // Use the job name to locate the correct file
-        // };
+        // Create the GetObjectCommand
+        const getObjectCommand = new GetObjectCommand(getObjectParams);
 
-        // // Retrieve the object from S3
-        // const getObjectCommand = new GetObjectCommand(getObjectParams);
-        // const response = await s3.send(getObjectCommand);
-        const s3ObjectUrl = parseUrl(`https://${"dubhackstranscribeoutput"}.s3.${"us-west-2"}.amazonaws.com/${key}`);
-        const url = await presigner.presign(new HttpRequest(s3ObjectUrl));
+        // Create a presigned URL for the object
+        const request = new HttpRequest({
+            ...getObjectParams,
+            protocol: 'https:',
+            hostname: `${getObjectParams.Bucket}.s3.${"us-west-2"}.amazonaws.com`,
+            method: 'GET'
+        });
+
+        // Generate the presigned URL
+        const url = await presigner.presign(request);
         console.log("PRESIGNED URL: ", formatUrl(url));
-        // Convert the stream response to a string 
-        const response = await axios.get(formatUrl(url));
-        // Parse the JSON to extract the transcript
-        const transcriptsString = response.results.transcripts[0].transcript;
 
-        // Loop through the transcripts array and append each transcript to the accumulated text
-        transcripts += " " + transcriptsString; // Append each transcript to the accumulated transcripts
-        
+        // Fetch the transcription result using the presigned URL
+        const response = await axios.get(formatUrl(url));
+
+        // Assuming the response is in the correct format, extract the transcript
+        const transcriptionResults = response.data; // Use response.data for axios
+        const transcriptsString = transcriptionResults.results.transcripts[0].transcript;
+
+        // Append the transcript to the accumulated transcripts
+        transcripts += " " + transcriptsString; // Accumulate the transcripts
+
         // Log the current transcripts
         console.log('Current Transcripts:', transcripts.trim());
     } catch (error) {
         console.error('Error fetching or processing transcription results:', error);
     }
 };
+
 
 
 app.get('/get-output', (req, res) => {
