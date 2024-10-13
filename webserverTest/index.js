@@ -208,8 +208,7 @@ const processTranscriptionResults = async (jobName) => {
     console.log("response", response);
         
         // Parse the JSON to extract the transcript
-        const transcriptionData = JSON.parse(response);
-        const transcriptsString = transcriptionData.results.transcripts[0].transcript;
+        const transcriptsString = response.results.transcripts[0].transcript;
 
         // Loop through the transcripts array and append each transcript to the accumulated text
         transcripts += " " + transcriptsString.transcript; // Append each transcript to the accumulated transcripts
