@@ -24,14 +24,14 @@ app.get("/", (req, res) => {
 
 app.post("/", (req, res) => {
   // Check if req.body.data is base64 encoded, and decode it
-    console.log(req);
-  console.log(req.body);
   if (req.body.data) {
     const decodedBuffer = base64ToArrayBuffer(req.body.data); // Convert base64 to ArrayBuffer
     frames.push(decodedBuffer);
     const aggregatedFrames = aggregateFrames(frames, 44100);
     res.send(Buffer.from(aggregatedFrames)); // Send back as a buffer (binary data)
-    console.log(aggregatedFrames);
+    if(frames.length==10){
+      console.log(aggregatedFrames);
+    }
   } else {
     res.status(400).send('Invalid data');
   }
