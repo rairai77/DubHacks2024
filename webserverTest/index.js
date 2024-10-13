@@ -3,10 +3,10 @@ const wav = require('wav');
 const atob = require('atob');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 4000;
 
-// Variable to store the WAV file buffer in memory
-let wavFileBuffer = null;
+// Array to store the concatenated Float32 audio data
+let accumulatedAudio = [];
 
 // Middleware to parse JSON
 app.use(express.json({ limit: '50mb' }));
@@ -26,43 +26,51 @@ app.post('/upload-audio', (req, res) => {
     // Convert Uint8Array to Float32Array
     const float32Array = new Float32Array(bytes.buffer);
 
-    // Convert Float32Array to 16-bit PCM (WAV standard)
-    const int16Array = new Int16Array(float32Array.length);
-    for (let i = 0; i < float32Array.length; i++) {
-        int16Array[i] = Math.max(-1, Math.min(1, float32Array[i])) * 32767;  // Scale to 16-bit PCM
-    }
+    // Append the new audio chunk to the accumulated audio array
+    accumulatedAudio = accumulatedAudio.concat(Array.from(float32Array));
 
-    // Create a WAV writer but write to a buffer instead of a file
-    const wavWriter = new wav.Writer({
-        channels: 1,
-        sampleRate: 44100,
-        bitDepth: 16
-    });
-
-    let wavBuffer = Buffer.alloc(0);  // Initialize an empty buffer
-
-    wavWriter.on('data', (chunk) => {
-        wavBuffer = Buffer.concat([wavBuffer, chunk]);  // Append each chunk to the buffer
-    });
-
-    wavWriter.write(Buffer.from(int16Array.buffer));
-    wavWriter.end(() => {
-        wavFileBuffer = wavBuffer;  // Store the complete WAV file in memory
-        res.status(200).send('Audio processed successfully');
-    });
+    res.status(200).send('Audio chunk added successfully');
 });
 
-// Endpoint to download the WAV file
+// Endpoint to download the concatenated WAV file
 app.get('/download-audio', (req, res) => {
-    if (wavFileBuffer) {
-        res.setHeader('Content-Type', 'audio/wav');
-        res.setHeader('Content-Disposition', 'attachment; filename="output.wav"');
-        res.send(wavFileBuffer);
+    if (accumulatedAudio.length > 0) {
+        // Convert the accumulated Float32 array to a 16-bit PCM format
+        const totalAudioLength = accumulatedAudio.length;
+        const float32Array = new Float32Array(accumulatedAudio);  // Convert back to Float32Array
+
+        // Convert Float32Array to 16-bit PCM (WAV standard)
+        const int16Array = new Int16Array(totalAudioLength);
+        for (let i = 0; i < totalAudioLength; i++) {
+            int16Array[i] = Math.max(-1, Math.min(1, float32Array[i])) * 32767;  // Scale to 16-bit PCM
+        }
+
+        // Create a WAV writer but write to a buffer instead of a file
+        const wavWriter = new wav.Writer({
+            channels: 1,
+            sampleRate: 44100,
+            bitDepth: 16
+        });
+
+        let wavBuffer = Buffer.alloc(0);  // Initialize an empty buffer
+
+        wavWriter.on('data', (chunk) => {
+            wavBuffer = Buffer.concat([wavBuffer, chunk]);  // Append each chunk to the buffer
+        });
+
+        wavWriter.write(Buffer.from(int16Array.buffer));
+        wavWriter.end(() => {
+            // Send the combined WAV file as a response
+            res.setHeader('Content-Type', 'audio/wav');
+            res.setHeader('Content-Disposition', 'attachment; filename="output.wav"');
+            res.send(wavBuffer);
+        });
     } else {
-        res.status(404).send('No audio file available for download');
+        res.status(404).send('No audio data available for download');
     }
 });
 
+// Start the server
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
