@@ -1,7 +1,7 @@
 const express = require('express');
 const wav = require('wav');
 const atob = require('atob');
-const { TranscribeClient, StartTranscriptionJobCommand, GetTranscriptionJobCommand } = require('@aws-sdk/client-transcribe');
+const { Transcribe, StartTranscriptionJobCommand, GetTranscriptionJobCommand } = require('@aws-sdk/client-transcribe');
 const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3'); // Use require here
 const axios = require('axios');
 require('dotenv').config(); 
@@ -11,7 +11,7 @@ const app = express();
 const port = process.env.PORT || 4000;
 
 // Initialize AWS Transcribe
-const transcribeService = new TranscribeClient({
+const transcribeService = new Transcribe({
     credentials: {
         // Use environment variables for security
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -152,26 +152,23 @@ const startJob = async (transcriptionParams) => {
     }
 };
 
-
 const pollJobStatus = async (jobName) => {
+    const getJobParams = { TranscriptionJobName: jobName };
     
     const checkStatus = async () => {
         try {
-            const input = {
-                TranscriptionJobName: jobName
-            };
-
-            const command = new GetTranscriptionJobCommand(input);
-            const TranscriptionJob  = await transcribeService.send(command);
+            const data = await transcribeService.send(
+                new GetTranscriptionJobCommand(getJobParams)
+            );
+            const jobStatus = data.TranscriptionJob.TranscriptionJobStatus;
             
-            if (TranscriptionJob.TranscriptionJobStatus === "COMPLETED") {
+            if (jobStatus === "COMPLETED") {
                 // Call processTranscriptionResults once job is completed
-                console.log("next line processes results");
                 processTranscriptionResults(jobName);
-            } else if (TranscriptionJob.TranscriptionJobStatus === 'FAILED') {
+            } else if (jobStatus === 'FAILED') {
                 console.error(`Transcription job ${jobName} failed.`);
             } else {
-                setTimeout(checkStatus, 5000); // Retry after 5 seconds if not completed
+                setTimeout(checkStatus, 1000); // Retry after 5 seconds if not completed
             }
         } catch (err) {
             console.error('Error checking job status:', err);
@@ -194,40 +191,41 @@ const pollJobStatus = async (jobName) => {
 
 const processTranscriptionResults = async (jobName) => {
     try {
-        // Wait a moment to ensure the transcription is completed
+        // Add a small delay to allow the transcription to complete
         await new Promise(resolve => setTimeout(resolve, 5000));
 
-        // Define parameters to fetch the transcription result from S3
+        // Fetch the transcription result from S3
         const getObjectParams = {
             Bucket: 'dubhackstranscribeoutput', // Your output bucket name
             Key: `${jobName}.json`  // Use the job name to locate the correct file
         };
 
         // Retrieve the object from S3
-        const getObjectCommand = new GetObjectCommand(getObjectParams);
-        const response = await s3.send(getObjectCommand);
+        const command = new GetObjectCommand(getObjectParams);
+        const { response } = await s3.send(command);
         
-        // Convert the stream response to a string
-        const responseBody = await streamToString(response.Body);
-        
-        // Parse the JSON to extract the transcript
-        const transcriptionData = JSON.parse(responseBody);
-        const transcriptsString = transcriptionData.results.transcripts[0].transcript;
 
-        // Loop through the transcripts array and append each transcript to the accumulated text
-        transcripts += " " + transcriptsString.transcript; // Append each transcript to the accumulated transcripts
+        // Extract the first transcript value
+        const firstTranscript = response.results.transcripts[0].transcript;
 
+        // Add it to the transcripts array
+        transcripts += " " + firstTranscript;
+        const wordCount = transcripts.trim().split(/\s+/).length;
 
-        // Log the current transcripts
-        console.log('Current Transcripts:', transcripts.trim());
+        if (wordCount >= 10) {
+            outputText = transcripts;
+
+            transcripts = ""; // Keep only the last 10 words
+            
+        }
+        console.log('Current Transcripts:', transcripts.join(' ')); // Logs the concatenated transcripts
     } catch (error) {
         console.error('Error fetching or processing transcription results:', error);
     }
 };
 
-
 app.get('/get-output', (req, res) => {
-    res.status(200).send("hi" + outputText);
+    res.status(200).send(outputText);
 });
 
 let clearData = () => {

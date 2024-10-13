@@ -72,11 +72,11 @@ let AudioRecorder = class AudioRecorder extends BaseScriptComponent {
     //     return result;
     // } 
     postData(data, length) {
-        print(Math.min(...data) + " " + Math.max(...data));
+        // print(Math.min(...data) + " " + Math.max(...data));
         const base64Data = this.float32ArrayToBase64(data, length); // Convert Float32Array to base64
-        print(data.buffer);
-        print(data.byteOffset);
-        print(data.byteLength);
+        // print(data.buffer);
+        // print(data.byteOffset)
+        // print(data.byteLength);
         const request = RemoteServiceHttpRequest.create();
         request.method = RemoteServiceHttpRequest.HttpRequestMethod.Post;
         request.setHeader('Content-Type', 'application/json');
@@ -84,7 +84,7 @@ let AudioRecorder = class AudioRecorder extends BaseScriptComponent {
         // request.url = "http://localhost:4000/upload-audio";
         request.body = '{"data": "' + base64Data + '"}';
         this.remoteServiceModule.performHttpRequest(request, (response) => {
-            print("RESPONSE BODY: " + response.body);
+            // print("RESPONSE BODY: " + response.body);
         });
     }
     __initialize() {

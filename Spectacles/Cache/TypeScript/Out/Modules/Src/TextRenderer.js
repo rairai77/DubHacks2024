@@ -17,19 +17,16 @@ let NewScript = class NewScript extends BaseScriptComponent {
     onStart() {
     }
     onUpdate() {
-        // this.getData()
+        this.getData();
     }
     getData() {
-        // const request = RemoteServiceHttpRequest.create()
-        // request.method = RemoteServiceHttpRequest.HttpRequestMethod.Get
-        // request.url = "https://dubhacks2024.onrender.com/"
-        // print(request.body)
-        // this.remoteServiceModule.performHttpRequest(request, (response) => {
-        //     print("STATUS CODE: " + response.statusCode)
-        //     print("HEADERS: " + JSON.stringify(response.headers))
-        //     print("RESPONSE BODY: " + response.body)
-        //     this.text.text = response.body;
-        //     })
+        const request = RemoteServiceHttpRequest.create();
+        request.method = RemoteServiceHttpRequest.HttpRequestMethod.Get;
+        request.url = "https://dubhacks2024.onrender.com/get-output";
+        this.remoteServiceModule.performHttpRequest(request, (response) => {
+            print(response.body);
+            this.text.text = response.body;
+        });
     }
 };
 exports.NewScript = NewScript;
