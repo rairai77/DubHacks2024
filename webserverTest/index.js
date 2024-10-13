@@ -156,10 +156,10 @@ const pollJobStatus = async (jobName) => {
     
     const checkStatus = async () => {
         try {
-            const command = new GetTranscriptionJobCommand(jobName);
+            const command = new GetTranscriptionJobCommand( { TranscriptionJobName: jobName, });
             const { response } = await s3.send(command);
             
-            if (response.TranscriptionJob.TranscriptionjobStatus === "COMPLETED") {
+            if (response.jobName.status === "COMPLETED") {
                 // Call processTranscriptionResults once job is completed
                 processTranscriptionResults(jobName);
             } else if (response.TranscriptionJob.TranscriptionjobStatus === 'FAILED') {
@@ -192,19 +192,22 @@ const processTranscriptionResults = async (jobName) => {
         await new Promise(resolve => setTimeout(resolve, 5000));
 
         // Fetch the transcription result from S3
-        // const getObjectParams = {
-        //     Bucket: 'dubhackstranscribeoutput', // Your output bucket name
-        //     Key: `${jobName}.json`  // Use the job name to locate the correct file
+        const getObjectParams = {
+            Bucket: 'dubhackstranscribeoutput', // Your output bucket name
+            Key: `${jobName}.json`  // Use the job name to locate the correct file
 
-        // };
+        };
 
         // Retrieve the object from S3
-        const command = new GetTranscriptionJobCommand(jobName);
-        const { response } = await s3.send(command);
+        const getObjectCommand = new GetObjectCommand(getObjectParams);
+        const response = await s3.send(getObjectCommand);
         
 
-        // Extract the first transcript value
-        const firstTranscript = response.results.transcripts[0].transcript;
+        const responseBody = await streamToString(response.Body);
+        
+        // Parse the JSON to extract the transcript
+        const transcriptionData = JSON.parse(responseBody);
+        const firstTranscript = transcriptionData.results.transcripts[0]
 
         // Add it to the transcripts array
         transcripts += " " + firstTranscript;
@@ -220,6 +223,15 @@ const processTranscriptionResults = async (jobName) => {
     } catch (error) {
         console.error('Error fetching or processing transcription results:', error);
     }
+};
+
+const streamToString = (stream) => {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        stream.on('data', (chunk) => chunks.push(chunk));
+        stream.on('error', reject);
+        stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+    });
 };
 
 app.get('/get-output', (req, res) => {
