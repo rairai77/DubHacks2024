@@ -195,51 +195,37 @@ const pollJobStatus = async (jobName) => {
 
 const processTranscriptionResults = async (jobName) => {
     try {
-        // Add a small delay to allow the transcription to complete
+        // Wait a moment to ensure the transcription is completed
         await new Promise(resolve => setTimeout(resolve, 5000));
 
-        // Fetch the transcription result from S3
+        // Define parameters to fetch the transcription result from S3
         const getObjectParams = {
             Bucket: 'dubhackstranscribeoutput', // Your output bucket name
             Key: `${jobName}.json`  // Use the job name to locate the correct file
-
         };
 
         // Retrieve the object from S3
         const getObjectCommand = new GetObjectCommand(getObjectParams);
         const response = await s3.send(getObjectCommand);
         
-
+        // Convert the stream response to a string
         const responseBody = await streamToString(response.Body);
         
         // Parse the JSON to extract the transcript
         const transcriptionData = JSON.parse(responseBody);
-        const firstTranscript = transcriptionData.results.transcripts[0]
+        const transcriptsString = transcriptionData.results.transcripts[0].transcript;
 
-        // Add it to the transcripts array
-        transcripts += " " + firstTranscript;
-        const wordCount = transcripts.trim().split(/\s+/).length;
+        // Loop through the transcripts array and append each transcript to the accumulated text
+        transcripts += " " + transcriptsString.transcript; // Append each transcript to the accumulated transcripts
 
-        if (wordCount >= 10) {
-            outputText = transcripts;
 
-            transcripts = ""; // Keep only the last 10 words
-            
-        }
-        console.log('Current Transcripts:', transcripts.join(' ')); // Logs the concatenated transcripts
+        // Log the current transcripts
+        console.log('Current Transcripts:', transcripts.trim());
     } catch (error) {
         console.error('Error fetching or processing transcription results:', error);
     }
 };
 
-const streamToString = (stream) => {
-    return new Promise((resolve, reject) => {
-        const chunks = [];
-        stream.on('data', (chunk) => chunks.push(chunk));
-        stream.on('error', reject);
-        stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
-    });
-};
 
 app.get('/get-output', (req, res) => {
     res.status(200).send("hi" + outputText);
