@@ -172,6 +172,7 @@ const pollJobStatus = async (jobName) => {
                 console.error(`Transcription job ${jobName} failed.`);
             } else {
                 setTimeout(checkStatus, 5000); // Retry after 5 seconds if not completed
+                console.log("Job not completed yet");
             }
         } catch (err) {
             console.error('Error checking job status:', err);
@@ -194,8 +195,6 @@ const pollJobStatus = async (jobName) => {
 
 const processTranscriptionResults = async (jobName) => {
     try {
-        // Wait a moment to ensure the transcription is completed
-        await new Promise(resolve => setTimeout(resolve, 5000));
 
         // Define parameters to fetch the transcription result from S3
         const getObjectParams = {
