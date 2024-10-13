@@ -1,0 +1,39 @@
+- !<AssetImportMetadata/202fec05-7aaf-4507-a5e9-aafa9d63219e>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> 11c5ac1c-262a-469f-8468-e787d6abd690
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> 11c5ac1c-262a-469f-8468-e787d6abd690
+  PackageType: NotAPackage
+  PackagePolicy: CannotBeUnpacked
+  AssetDataMap:
+    TypeScriptAsset: !<own> 2bf29835-b8cd-464e-8abd-cdc45d47dc3d
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings/742aad29-acfd-4c59-bba2-7eea1c4faf73>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/2bf29835-b8cd-464e-8abd-cdc45d47dc3d>
+  SvgIcon: ""
+  Description: ""
+  InternalVersion: 0
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: 00000000-0000-0000-0000-000000000000
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  CurrentVisibility: Editable
+  MaxVisibility: Editable
+  ScriptInputsHidden:
+    audioTrackAsset: false
+    remoteServiceModule: false
+  ScriptTypesHidden:
+    {}
+  DefaultScriptInputs:
+    - audioTrackAsset: !<reference.AudioTrackAsset> 00000000-0000-0000-0000-000000000000
+      remoteServiceModule: !<reference.RemoteServiceModule> 00000000-0000-0000-0000-000000000000
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - // @input Asset.AudioTrackAsset audioTrackAsset
+    - // @input Asset.RemoteServiceModule remoteServiceModule
