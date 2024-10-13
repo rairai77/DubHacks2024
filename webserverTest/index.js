@@ -226,7 +226,7 @@ const processTranscriptionResults = async (jobName) => {
 };
 
 app.get('/get-output', (req, res) => {
-    res.status(200).send(outputText);
+    res.status(200).send("hi" + outputText);
 });
 
 let clearData = () => {
