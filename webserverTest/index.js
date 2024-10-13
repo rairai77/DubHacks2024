@@ -1,7 +1,7 @@
 const express = require('express');
 const wav = require('wav');
 const atob = require('atob');
-const { Transcribe, StartTranscriptionJobCommand } = require('@aws-sdk/client-transcribe');
+const { Transcribe, StartTranscriptionJobCommand, GetTranscriptionJobCommand } = require('@aws-sdk/client-transcribe');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3'); // Use require here
 const axios = require('axios');
 require('dotenv').config(); 
@@ -114,7 +114,6 @@ async function downloadAudio() {
             try {
                 // Upload the WAV file to S3
                 const uploadResult = await s3.send(command);
-                console.log('Upload succeeded:', uploadResult);
                 
                 const mediaFileUri = `https://dubhackstranscribe.s3.us-west-2.amazonaws.com/${key}`;
                 // Parameters for the transcription job
@@ -144,12 +143,40 @@ const startJob = async (transcriptionParams) => {
     try {
         const data = await transcribeService.send(
             new StartTranscriptionJobCommand(transcriptionParams)
-        );
-        console.log("Success - put", data);
-        return data; // For unit tests.
+        ) 
+        const jobName = transcriptionParams.TranscriptionJobName;
+        // Poll the job status until it is complete
+        pollJobStatus(jobName);
     } catch (err) {
-        console.log("Error", err);
+        error.log("Error", err);
     }
+};
+
+const pollJobStatus = async (jobName) => {
+    const getJobParams = { TranscriptionJobName: jobName };
+    
+    const checkStatus = async () => {
+        try {
+            const data = await transcribeService.send(
+                new GetTranscriptionJobCommand(getJobParams)
+            );
+            const jobStatus = data.TranscriptionJob.TranscriptionJobStatus;
+            
+            if (jobStatus === 'COMPLETED') {
+                // Call processTranscriptionResults once job is completed
+                processTranscriptionResults(jobName);
+            } else if (jobStatus === 'FAILED') {
+                console.error(`Transcription job ${jobName} failed.`);
+            } else {
+                setTimeout(checkStatus, 1000); // Retry after 5 seconds if not completed
+            }
+        } catch (err) {
+            console.error('Error checking job status:', err);
+        }
+    };
+
+    // Start checking the status
+    checkStatus();
 };
 
 // Generate a simple sine wave as a test audio input
@@ -173,6 +200,7 @@ const processTranscriptionResults = async (jobName) => {
         
         // Extract the first transcript value
         const firstTranscript = response.data.results.transcripts[0].transcript;
+
         // Add it to the transcripts array
         transcripts += " " + firstTranscript;
         const wordCount = transcripts.trim().split(/\s+/).length;
