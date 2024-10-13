@@ -24,7 +24,7 @@ app.post('/upload-audio', (req, res) => {
 
     // Convert Uint8Array to Float32Array
     const float32Array = new Float32Array(bytes.buffer);
-    accumulateAudioForm.push(float32Array);
+    accumulateAudio32.push(float32Array);
     // Append the new audio chunk to the accumulated audio array
     accumulatedAudio = accumulatedAudio.concat(Array.from(float32Array));
     // accumulatedAudio = accumulatedAudio.concat(Array.from(generateSineWave(440, 2)));  // 440 Hz tone, 2 seconds long
