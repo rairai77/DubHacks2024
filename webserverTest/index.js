@@ -117,12 +117,12 @@ async function downloadAudio() {
                 // Parameters for the transcription job
                 const transcriptionParams = {
                     TranscriptionJobName: `TranscriptionJob-${Date.now()}`, // Unique job name
-                    IdentifyLanguage, // For example, 'en-US'
-                    MediaFormat: 'wav', // Assuming you are using 'wav'
                     Media: {
                         MediaFileUri: uploadResult.Location // Use the S3 file location
                     },
-                    OutputBucketName: 'dubhackstranscribeoutput' // Update with your output bucket
+                    OutputBucketName: 'dubhackstranscribeoutput', // Update with your output bucket
+                    MediaFormat: 'wav', // Assuming you are using 'wav'
+                    IdentifyLanguage: true  
                 };
 
                 // Start the transcription job
