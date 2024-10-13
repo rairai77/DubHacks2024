@@ -1,11 +1,21 @@
 const express = require('express');
 const wav = require('wav');
 const atob = require('atob');
+const { S3RequestPresigner } =require('@aws-sdk/s3-request-presigner');
 const { TranscribeClient, StartTranscriptionJobCommand, GetTranscriptionJobCommand } = require('@aws-sdk/client-transcribe');
 const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3'); // Use require here
 const axios = require('axios');
 require('dotenv').config(); 
 
+
+const presigner = new S3RequestPresigner({
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    },
+    region: 'us-west-2',
+    sha256: Hash.bind(null, "sha256") // In Node.js
+});
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -160,7 +170,7 @@ const pollJobStatus = async (jobName) => {
             const input = {
                 TranscriptionJobName: jobName
             };
-
+ 
             const command = new GetTranscriptionJobCommand(input);
             const TranscriptionJob  = await transcribeService.send(command);
             
@@ -172,7 +182,7 @@ const pollJobStatus = async (jobName) => {
                 console.error(`Transcription job ${jobName} failed.`);
             } else {
                 setTimeout(checkStatus, 5000); // Retry after 5 seconds if not completed
-                // console.log(TranscriptionJob);  
+                console.log(TranscriptionJob);
             }
         } catch (err) {
             console.error('Error checking job status:', err);
@@ -193,27 +203,29 @@ const pollJobStatus = async (jobName) => {
 //     return sineWave;
 // }
 
-const processTranscriptionResults = async (jobName) => {
+const processTranscriptionResults = async (key) => {
     try {
 
         // Define parameters to fetch the transcription result from S3
-        const getObjectParams = {
-            Bucket: 'dubhackstranscribeoutput', // Your output bucket name
-            Key: `${jobName}.json`  // Use the job name to locate the correct file
-        };
+        // const getObjectParams = {
+        //     Bucket: 'dubhackstranscribeoutput', // Your output bucket name
+        //     Key: `${jobName}.json`  // Use the job name to locate the correct file
+        // };
 
-        // Retrieve the object from S3
-        const getObjectCommand = new GetObjectCommand(getObjectParams);
-        const response = await s3.send(getObjectCommand);
-    console.log("response", response);
-        
+        // // Retrieve the object from S3
+        // const getObjectCommand = new GetObjectCommand(getObjectParams);
+        // const response = await s3.send(getObjectCommand);
+        const s3ObjectUrl = parseUrl(`https://${"dubhackstranscribeoutput"}.s3.${"us-west-2"}.amazonaws.com/${key}`);
+        const url = await presigner.presign(new HttpRequest(s3ObjectUrl));
+        console.log("PRESIGNED URL: ", formatUrl(url));
+        // Convert the stream response to a string 
+        const response = await axios.get(formatUrl(url));
         // Parse the JSON to extract the transcript
         const transcriptsString = response.results.transcripts[0].transcript;
 
         // Loop through the transcripts array and append each transcript to the accumulated text
-        transcripts += " " + transcriptsString.transcript; // Append each transcript to the accumulated transcripts
-
-
+        transcripts += " " + transcriptsString; // Append each transcript to the accumulated transcripts
+        
         // Log the current transcripts
         console.log('Current Transcripts:', transcripts.trim());
     } catch (error) {
