@@ -179,8 +179,9 @@ const processTranscriptionResults = async (jobName) => {
 
         if (wordCount >= 10) {
             outputText = transcripts;
+            console.log(outputText);
             transcripts = ""; // Keep only the last 10 words
-            console.log("Transcripts cleared, keeping last 10 words:", transcripts);
+            
         }
         console.log('Current Transcripts:', transcripts.join(' ')); // Logs the concatenated transcripts
     } catch (error) {
