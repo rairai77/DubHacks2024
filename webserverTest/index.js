@@ -240,11 +240,12 @@ const processTranscriptionResults = async (key) => {
 
         // Log the current transcripts
         console.log('Current Transcripts:', transcripts.trim());
-
+        outputText = transcripts.trim();
         const wordCount = transcripts.trim().split(/\s+/).length; // Split by whitespace to count words
-        if (wordCount >= 10) {
+        if (wordCount >= 100) {
             // Call the output endpoint
-            outputText = transcripts.trim();
+            outputText = "";
+            transcripts = "";
         }
 
     } catch (error) {
@@ -256,8 +257,7 @@ const processTranscriptionResults = async (key) => {
 
 app.get('/get-output', (req, res) => {
     res.status(200).send("hi" + outputText);
-    transcripts = "";
-    outputText = "";
+    
 });
 
 let clearData = () => {
