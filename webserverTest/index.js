@@ -183,7 +183,7 @@ const pollJobStatus = async (jobName) => {
             } else if (TranscriptionJob.TranscriptionJob.TranscriptionJobStatus === 'FAILED') {
                 console.error(`Transcription job ${jobName} failed.`);
             } else {
-                setTimeout(checkStatus, 5000); // Retry after 5 seconds if not completed
+                setTimeout(checkStatus, 1000); // Retry after 5 seconds if not completed
                 console.log(TranscriptionJob);
             }
         } catch (err) {
@@ -283,7 +283,7 @@ const processTranscriptionResults = async (key) => {
 
 
 app.get('/get-output', (req, res) => {
-    res.status(200).send("hi" + outputText);
+    res.status(200).send(outputText);
     
 });
 
