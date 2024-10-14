@@ -231,7 +231,6 @@ const processTranscriptionResults = async (key) => {
 
         // Fetch the transcription result using the presigned URL
         const response = await axios.get(formattedUrl);
-
         // Assuming the response is in the correct format, extract the transcript
         const transcriptionResults = response.data; // Use response.data for axios
         const transcriptsString = transcriptionResults.results.transcripts[0].transcript;
@@ -241,6 +240,13 @@ const processTranscriptionResults = async (key) => {
 
         // Log the current transcripts
         console.log('Current Transcripts:', transcripts.trim());
+
+        const wordCount = transcripts.trim().split(/\s+/).length; // Split by whitespace to count words
+        if (wordCount >= 10) {
+            // Call the output endpoint
+            outputText = transcripts.trim();
+        }
+
     } catch (error) {
         console.error('Error fetching or processing transcription results:', error);
     }
@@ -250,6 +256,8 @@ const processTranscriptionResults = async (key) => {
 
 app.get('/get-output', (req, res) => {
     res.status(200).send("hi" + outputText);
+    transcripts = "";
+    outputText = "";
 });
 
 let clearData = () => {
