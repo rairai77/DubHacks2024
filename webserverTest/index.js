@@ -204,7 +204,6 @@ const pollJobStatus = async (jobName) => {
 //     }
 //     return sineWave;
 // }
-
 const processTranscriptionResults = async (key) => {
     try {
         // Define the parameters for the GetObjectCommand to fetch the transcription results
@@ -231,7 +230,6 @@ const processTranscriptionResults = async (key) => {
 
         // Fetch the transcription result using the presigned URL
         const response = await axios.get(formattedUrl);
-        // Assuming the response is in the correct format, extract the transcript
         const transcriptionResults = response.data; // Use response.data for axios
         const transcriptsString = transcriptionResults.results.transcripts[0].transcript;
 
@@ -240,18 +238,47 @@ const processTranscriptionResults = async (key) => {
 
         // Log the current transcripts
         console.log('Current Transcripts:', transcripts.trim());
-        outputText = transcripts.trim();
-        const wordCount = transcripts.trim().split(/\s+/).length; // Split by whitespace to count words
-        if (wordCount >= 100) {
-            // Call the output endpoint
-            outputText = "";
-            transcripts = "";
+
+        // Check word count and manage newlines
+        const words = transcripts.trim().split(/\s+/); // Split by whitespace to get words
+        const wordCount = words.length; // Get word count
+
+        // Set the maximum number of characters per line
+        const maxCharsPerLine = 50; // You can adjust this value
+
+        // Create a formatted version of outputText
+        let formattedTranscripts = "";
+        let currentLine = "";
+
+        words.forEach(word => {
+            if ((currentLine + word).length <= maxCharsPerLine) {
+                currentLine += (currentLine ? " " : "") + word; // Add the word to the current line
+            } else {
+                formattedTranscripts += currentLine + "\n"; // Add the current line to the output
+                currentLine = word; // Start a new line with the current word
+            }
+        });
+
+        // Add any remaining words to the formatted output
+        if (currentLine) {
+            formattedTranscripts += currentLine + "\n";
         }
 
+        // Update outputText with formatted transcripts every 10 words
+        if (wordCount >= 10) {
+            outputText += formattedTranscripts; // Add formatted transcripts to outputText
+
+            // Clear the current transcripts and output text
+            setTimeout(() => {
+                transcripts = ""; // Clear transcripts
+                outputText = ""; // Clear output text
+            }, 5000);
+        }
     } catch (error) {
         console.error('Error fetching or processing transcription results:', error);
     }
 };
+
 
 
 
