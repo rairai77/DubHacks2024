@@ -226,10 +226,11 @@ const processTranscriptionResults = async (key) => {
 
         // Generate the presigned URL
         const url = await presigner.presign(request);
-        console.log("PRESIGNED URL: ", formatUrl(url));
+        const formattedUrl = `${request.protocol}//${request.hostname}${request.path}`;
+        console.log("PRESIGNED URL: ", formattedUrl);
 
         // Fetch the transcription result using the presigned URL
-        const response = await axios.get(formatUrl(url));
+        const response = await axios.get(formattedUrl);
 
         // Assuming the response is in the correct format, extract the transcript
         const transcriptionResults = response.data; // Use response.data for axios
